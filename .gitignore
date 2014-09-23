@@ -1,0 +1,15 @@
+# Ignore everything:
+/*
+
+# Except for the themes directories:
+
+!.gitignore
+!Controller/
+!EventButton/
+!libraries/
+
+libraries/*
+!libraries/Button/
+libraries/Button/examples
+!libraries/Controller/
+!libraries/Scene/
