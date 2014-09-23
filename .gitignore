@@ -13,3 +13,5 @@ libraries/*
 libraries/Button/examples
 !libraries/Controller/
 !libraries/Scene/
+!libraries/Adafruit/
+libraries/Adafruit/examples
