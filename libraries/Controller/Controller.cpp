@@ -1,12 +1,10 @@
 /* $Id$
 
-*/
-
 #include "Controller.h"
 
 
  static CHANNEL channel[15];  
- 
+ //Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 /*
 || @constructor
 || | Set the initial state of this button
@@ -19,13 +17,43 @@ Controller::Controller()
 {
   for(uint8_t pin=0; pin < 15; pin++) {
     channel[pin].Value = 0;
-    channel[pin].Lock = 0;
+    channel[pin].Locked = 0;
   }
+  //pwm.begin();
+  //pwm.setPWMFreq(1600);
 }
+
+
 
 uint8_t Controller::read(uint8_t pin) // return the value as degrees
 {
   return channel[pin].Value;     
+
+}
+
+bool Controller::write(uint8_t pin, uint8_t value)
+{
+    if (channel[pin].Locked = true)
+    { 
+        return false;
+    }
+//TODO limit
+    channel[pin].Value = value;
+    //pwm.setPWM(pin, 0, value); 
+    return true;
+    
+}
+
+bool Controller::lock(uint8_t pin, bool lock)
+{
+    channel[pin].Locked = lock;
+    return channel[pin].Locked ;
+
+}
+
+bool Controller::locked(uint8_t pin) // return the value as degrees
+{
+  return channel[pin].Locked;     
 
 }
 

@@ -1,4 +1,6 @@
+#include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
+
 #include <Controller.h>
 
 
@@ -33,18 +35,22 @@ String token = "fg5gpo3D";
 int id = 1;
 
 Controller controller;
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Loading controller module...");
   
   SerialString.reserve(200);
+  
+  pwm.begin();
+  pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly: 
-    if (stringComplete) {
+  if (stringComplete) {
     Serial.println(SerialString); 
     processSerial();
     // clear the string:
@@ -59,9 +65,6 @@ void processSerial() {
   String values[6];
 
   int i;
-  // i=1&t=fg5gpo3D&a=r&p=2
-
-  
   
   for (i = 0; i < 6; i = i + 1) {
     String needle = String(params[i]) + "=";
@@ -73,7 +76,8 @@ void processSerial() {
             values[i] = result;
           } 
   }
-
+ // TODO: look into changing values to struct, may save space on type conversion 
+ 
 //  for (i = 0; i < 6; i = i + 1) {
 //    Serial.print(params[i]);
 //    Serial.print("=");
@@ -116,20 +120,36 @@ void processSerial() {
       return;
     }
     
-    if (values[DURAT].equals("\0") == true) {
-      values[DURAT] = 0;
+    bool isLocked = controller.write(values[PIN].toInt(), values[VALUE].toInt());
+    
+    if (isLocked)
+    {
+      Serial.println("Pin is locked");
     }
+    else
+    {
+      pwm.setPWM(values[PIN].toInt(), 0, values[VALUE].toInt() );
+      Serial.print("Pin is at ");
+      Serial.println(values[VALUE]);
+    }
+    
+    
+//    if (values[DURAT].equals("\0") == true) {
+//      values[DURAT] = 0;
+//    }
 
   }
 
   // i=1&t=fg5gpo3D&p=2&a=l
   if (values[ACTION].equals("l") == true) {
     Serial.println("Locking");
+    Serial.println(controller.lock(values[PIN].toInt()), true);
   }
   
     // i=1&t=fg5gpo3D&p=2&a=u
   if (values[ACTION].equals("u") == true) {
     Serial.println("Unlocking");
+    Serial.println(controller.lock(values[PIN].toInt()), false);
   }  
 
 
