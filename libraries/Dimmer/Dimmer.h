@@ -1,9 +1,6 @@
-/* $Id$
 
-*/
-
-#ifndef CONTROLLER_H
-#define CONTROLLER_H
+#ifndef DIMMER_H
+#define DIMMER_H
 #include <stdint.h>
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
@@ -25,10 +22,10 @@ typedef struct  {
 
 
 
-class Controller
+class Dimmer
 {
   public:
-    Controller();
+    Dimmer();
     void PWMinit(uint8_t addr = 0x40, float freq = 1600);
     void updateFades();
     uint16_t read(uint8_t Pin);
@@ -40,7 +37,7 @@ class Controller
 // ? isFading (is ther a fade on this channel
 // ? clearFades (clear fades on a channel)
 
-    bool operator==(Controller &rhs);
+    bool operator==(Dimmer &rhs);
 
   private:
     Adafruit_PWMServoDriver PWM;
@@ -50,4 +47,4 @@ class Controller
 
 
 #endif
-// CONTROLLER_H
+// DIMMER_H

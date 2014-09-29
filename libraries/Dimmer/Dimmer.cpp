@@ -1,4 +1,4 @@
-#include "Controller.h"
+#include "Dimmer.h"
 
 #define CHANNEL_SIZE    15
 #define FADE_BUFFER_SIZE    2
@@ -13,7 +13,7 @@
 ||
 */
 
-Controller::Controller()// : pwm()
+Dimmer::Dimmer()// : pwm()
 {
   for(uint8_t pin=0; pin < CHANNEL_SIZE; pin++) 
   { 
@@ -34,7 +34,7 @@ Controller::Controller()// : pwm()
 ||
 */
 
-void Controller::PWMinit(uint8_t addr, float freq)
+void Dimmer::PWMinit(uint8_t addr, float freq)
 {
   PWM = Adafruit_PWMServoDriver(addr);
   PWM.begin(); 
@@ -49,7 +49,7 @@ void Controller::PWMinit(uint8_t addr, float freq)
 || #
 ||
 */
-void Controller::updateFades()
+void Dimmer::updateFades()
 {
     uint32_t currentMillis = millis();
 
@@ -99,7 +99,7 @@ void Controller::updateFades()
 || @return current value of pin (0-4095)
 */
 
-uint16_t Controller::read(uint8_t pin) // return the value as degrees
+uint16_t Dimmer::read(uint8_t pin) // return the value as degrees
 {
   return channel[pin].Value;     
 }
@@ -119,7 +119,7 @@ uint16_t Controller::read(uint8_t pin) // return the value as degrees
 || @return true; false if fade buffer is full
 */
 
-bool Controller::addFade(uint8_t pin, uint16_t value, uint16_t span, uint16_t delay)
+bool Dimmer::addFade(uint8_t pin, uint16_t value, uint16_t span, uint16_t delay)
 {
     for(uint8_t frame=0; frame < FADE_BUFFER_SIZE; frame++)
     {
@@ -154,7 +154,7 @@ bool Controller::addFade(uint8_t pin, uint16_t value, uint16_t span, uint16_t de
 || @return true; false if pin is locked
 */
 
-bool Controller::write(uint8_t pin, uint16_t value)
+bool Dimmer::write(uint8_t pin, uint16_t value)
 {
     if (channel[pin].Locked == true)
     { 
@@ -179,7 +179,7 @@ bool Controller::write(uint8_t pin, uint16_t value)
 || @return true or false locked status
 */
 
-bool Controller::lock(uint8_t pin, bool lock)
+bool Dimmer::lock(uint8_t pin, bool lock)
 {
     channel[pin].Locked = lock;
     return channel[pin].Locked;
@@ -195,7 +195,7 @@ bool Controller::lock(uint8_t pin, bool lock)
 || @return true or false locked status
 */
 
-bool Controller::locked(uint8_t pin) // return the value as degrees
+bool Dimmer::locked(uint8_t pin) // return the value as degrees
 {
   return channel[pin].Locked;     
 }
@@ -203,14 +203,14 @@ bool Controller::locked(uint8_t pin) // return the value as degrees
 
 /*
 || @description
-|| | Compare a Controller object against this
+|| | Compare a Dimmer object against this
 || #
 ||
-|| @parameter  rhs the Controller to compare against this Controller
+|| @parameter  rhs the Dimmer to compare against this Dimmer
 ||
 || @return true if they are the same
 */
-bool Controller::operator==(Controller &rhs)
+bool Dimmer::operator==(Dimmer &rhs)
 {
   return (this == &rhs);
 }

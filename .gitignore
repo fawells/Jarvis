@@ -5,6 +5,7 @@
 
 !.gitignore
 !Controller/
+!Dimmer/
 !EventButton/
 !libraries/
 
@@ -12,6 +13,7 @@ libraries/*
 !libraries/Button/
 libraries/Button/examples
 !libraries/Controller/
+!libraries/Dimmer/
 !libraries/Scene/
 !libraries/Adafruit/
 libraries/Adafruit/examples

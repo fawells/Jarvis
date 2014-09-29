@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
-#include <Controller.h>
+#include <Dimmer.h>
 
 
 /*
@@ -35,13 +35,13 @@ boolean stringComplete = false;  // whether the string is complete
 String token = "fg5gpo3D";
 int id = 1;
 
-Controller controller;
+Dimmer dimmer;
 
 void setup() {
   Serial.begin(9600);
   while (!Serial) {;}
-  Serial.println("Loading controller module...");
-  controller.PWMinit();
+  Serial.println("Loading dimmer module...");
+  dimmer.PWMinit();
   SerialString.reserve(200);
   
 
@@ -49,7 +49,7 @@ void setup() {
 
 void loop() {
   // Update faders
-  controller.updateFades();
+  dimmer.updateFades();
   
   //Convert serial string into fade frames
   if (stringComplete)
@@ -111,7 +111,7 @@ void processSerial() {
   if (values[ACTION].equals("r") == true)
   {
     Serial.print("Reading: ");
-    Serial.println(controller.read(pin));
+    Serial.println(dimmer.read(pin));
    }
   
   
@@ -138,12 +138,12 @@ void processSerial() {
       values[DELAY] = 0;
     }
 
-    if (controller.locked(pin))
+    if (dimmer.locked(pin))
     {
       Serial.println("Pin is locked");
       return;
     }
-    bool success = controller.addFade(pin, values[VALUE].toInt(), values[SPAN].toInt(), values[DELAY].toInt());
+    bool success = dimmer.addFade(pin, values[VALUE].toInt(), values[SPAN].toInt(), values[DELAY].toInt());
     
     if (!success)
     {
@@ -157,14 +157,14 @@ void processSerial() {
   if (values[ACTION].equals("l") == true)
   {
     Serial.println("Locking");
-    controller.lock(pin, true);
+    dimmer.lock(pin, true);
   }
   
     // i=1&t=fg5gpo3D&p=2&a=u
   if (values[ACTION].equals("u") == true)
   {
     Serial.println("Unlocking");
-    controller.lock(pin, false);
+    dimmer.lock(pin, false);
   }  
 
   return;
