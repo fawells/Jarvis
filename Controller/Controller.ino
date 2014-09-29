@@ -13,7 +13,7 @@
     
     ACTIONS:
     r = read    -> read pin [p = pin]
-    w = write   -> write pin [p = pin, v = value, d = duration]
+    w = write   -> write pin [p = pin, v = value, s = span, d = delay]
     l = lock    -> lock pin  [p = pin]
     u = unlock  -> unlock pin [p = pin] 
 */
@@ -23,9 +23,10 @@
 #define ACTION       2 // a
 #define PIN          3 // p
 #define VALUE        4 // v
-#define DURAT        5 // d
- 
-char params[6] = {'i','t','a','p','v','d'};
+#define SPAN         5 // s
+#define DELAY        6 // d
+
+char params[7] = {'i','t','a','p','v','s','d'};
 
 String SerialString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -35,25 +36,25 @@ String token = "fg5gpo3D";
 int id = 1;
 
 Controller controller;
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 void setup() {
   Serial.begin(9600);
+  while (!Serial) {;}
   Serial.println("Loading controller module...");
-  
+  controller.PWMinit();
   SerialString.reserve(200);
   
-  pwm.begin();
-  pwm.setPWMFreq(1600);  // This is the maximum PWM frequency
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly: 
-  if (stringComplete) {
-    Serial.println(SerialString); 
+  // Update faders
+  controller.updateFades();
+  
+  //Convert serial string into fade frames
+  if (stringComplete)
+  {
     processSerial();
-    // clear the string:
     SerialString = "";
     stringComplete = false;
   }
@@ -62,99 +63,111 @@ void loop() {
 
 void processSerial() {
   Serial.println("Processing Serial data..."); 
-  String values[6];
+  String values[7];
 
-  int i;
-  
-  for (i = 0; i < 6; i = i + 1) {
+  for (int i = 0; i < 7; i = i + 1) {
     String needle = String(params[i]) + "=";
     int findParam = SerialString.indexOf(needle);
     if(findParam != -1)
-          {
-            int findNextParam = SerialString.indexOf("&", findParam);
-            String result = SerialString.substring(findParam+2,findNextParam);
-            values[i] = result;
-          } 
+    {
+      int findNextParam = SerialString.indexOf("&", findParam);
+      String result = SerialString.substring(findParam+2,findNextParam);
+      values[i] = result;
+    } 
   }
- // TODO: look into changing values to struct, may save space on type conversion 
- 
-//  for (i = 0; i < 6; i = i + 1) {
-//    Serial.print(params[i]);
-//    Serial.print("=");
-//    Serial.println(values[i]);
-//  }
   
-  if (values[ID].toInt() != id) {
+ /*
+  for (i = 0; i < 7; i = i + 1) {
+    Serial.print(params[i]);
+    Serial.print("=");
+    Serial.println(values[i]);
+  }
+ */
+ 
+  if (values[ID].toInt() != id)
+  {
     Serial.println("ID error");
     return;
   }
   
-  if (values[TOKEN].equals(token) != true) {
+  if (values[TOKEN].equals(token) != true)
+  {
     Serial.println("Token error");
     return;
   }
   
-  if (values[PIN].equals("\0") == true) {
+  if (values[PIN].equals("\0") == true)
+  {
     Serial.println("Pin error");
     return;
   }
+  
+  int pin = values[PIN].toInt();
   
 // As case switch doesn't work with String:
 
   // i=1&t=fg5gpo3D&p=2&a=r
   
-  if (values[ACTION].equals("r") == true) {
+  if (values[ACTION].equals("r") == true)
+  {
     Serial.print("Reading: ");
-    Serial.println(controller.read(values[PIN].toInt()));
-    
-  }
+    Serial.println(controller.read(pin));
+   }
   
   
   // i=1&t=fg5gpo3D&p=2&a=w&v=4095
+  // i=1&t=fg5gpo3D&p=2&a=w&v=4095&s=1000
+  // i=1&t=fg5gpo3D&p=2&a=w&v=4095&s=1000&d=1000
   
-  if (values[ACTION].equals("w") == true) {
+  if (values[ACTION].equals("w") == true)
+  {
     Serial.println("Writing");
     
-    if (values[VALUE].equals("\0") == true) {
+    if (values[VALUE].equals("\0") == true)
+    {
       Serial.println("Value error");
       return;
     }
     
-    bool isLocked = controller.write(values[PIN].toInt(), values[VALUE].toInt());
-    
-    if (isLocked)
+    if (values[SPAN].equals("\0") == true)
+    {
+      values[SPAN] = 0;
+    }
+    if (values[DELAY].equals("\0") == true)
+    {
+      values[DELAY] = 0;
+    }
+
+    if (controller.locked(pin))
     {
       Serial.println("Pin is locked");
+      return;
     }
-    else
+    bool success = controller.addFade(pin, values[VALUE].toInt(), values[SPAN].toInt(), values[DELAY].toInt());
+    
+    if (!success)
     {
-      pwm.setPWM(values[PIN].toInt(), 0, values[VALUE].toInt() );
-      Serial.print("Pin is at ");
-      Serial.println(values[VALUE]);
+      Serial.println("Buffer is full");
+      return;
     }
-    
-    
-//    if (values[DURAT].equals("\0") == true) {
-//      values[DURAT] = 0;
-//    }
 
   }
 
   // i=1&t=fg5gpo3D&p=2&a=l
-  if (values[ACTION].equals("l") == true) {
+  if (values[ACTION].equals("l") == true)
+  {
     Serial.println("Locking");
-    Serial.println(controller.lock(values[PIN].toInt()), true);
+    controller.lock(pin, true);
   }
   
     // i=1&t=fg5gpo3D&p=2&a=u
-  if (values[ACTION].equals("u") == true) {
+  if (values[ACTION].equals("u") == true)
+  {
     Serial.println("Unlocking");
-    Serial.println(controller.lock(values[PIN].toInt()), false);
+    controller.lock(pin, false);
   }  
 
-
-   
-  // Serial.println("Still here");
+  return;
 }
 
 
@@ -165,11 +178,13 @@ void processSerial() {
  time loop() runs, so using delay inside loop can delay
  response.  Multiple bytes of data may be available.
  */
-void serialEvent() {
-  while (Serial.available()) {
-    // get the new byte:
+void serialEvent()
+{
+  while (Serial.available())
+  {
     char inChar = (char)Serial.read(); 
-    if (inChar == '\n') {
+    if (inChar == '\n')
+    {
       stringComplete = true;
     } else {
       SerialString += inChar;
